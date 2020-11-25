@@ -1,6 +1,6 @@
 #!/bin/bash
 
-nc_ver=nextcloud-19.0.3.zip
+nc_ver=latest.zip
 echo "$nc_ver"
 
 sudo apt install nginx -y
@@ -17,34 +17,33 @@ sudo systemctl restart mariadb.service
 
 sudo apt install php-fpm php-mbstring php-xmlrpc php-soap php-apcu php-smbclient php-ldap php-redis php-gd php-xml php-intl php-json php-imagick php-mysql php-cli php-ldap php-zip php-curl php-dev libmcrypt-dev php-pear -y
 
-echo "======================================================================================================================================"
+
+echo "================================================================================================================================"
 echo " "
-read -p 'Please enter Data Base Name: ' dbname
-echo " "
-read -p 'Please enter Data Base user name: ' users
-echo " "
-read -p -s 'Please enter password Data Base user: ' shadows
-if [ -z "$dbname" ] || [ -z "$shadows" ] || [ -z "$users" ]
-then
-    echo 'Inputs cannot be blank please try again!'
-    exit 0
+
+while [[ $valve != 1 ]]
+do
+
+read -p  "Please enter a valid hostname: " my_hostname
+
+if [[ ! -z $my_hostname ]] && [[ ! -z `dig +short "$my_hostname"` ]] ; then
+       valve=1
 fi
+done
+valve=0
+
+while [[ `. eml_verf $my_email` != OK ]]
+do
+
+  read -p  "Please enter a valid email address: " my_email
+
+done
+echo ""
 
 mysql -e "CREATE DATABASE ${dbname};"
 mysql -e "CREATE USER '${users}'@'localhost' IDENTIFIED BY '${shadows}';"
 mysql -e "GRANT ALL ON ${dbname}.* TO '${users}'@'localhost' IDENTIFIED BY '${shadows}' WITH GRANT OPTION;"
 mysql -e "FLUSH PRIVILEGES;"
-
-echo " "
-read -p 'Please enter your Domain Name: ' domainame
-echo " "
-read -p 'Please enter your email: ' my_email
-if [ -z "$domainame" ] || [ -z "$my_email" ]
-then
-    echo 'Inputs cannot be blank please try again!'
-    exit 0
-fi
-echo " "
 
 sudo apt install certbot python-certbot-nginx python3-certbot-nginx -y
 sudo systemctl stop nginx
@@ -59,9 +58,9 @@ php_ver=`php -v | grep PHP | head -1 | cut -d ' ' -f2 | cut -c 1-3`
 sudo cp ./nextcloud /etc/nginx/sites-available/
 
 sudo sed -i "s/php7.4/$php_ver/g" /etc/nginx/sites-available/nextcloud
-sudo sed -i "s/my_domain_name/$domainame/g" /etc/nginx/sites-available/nextcloud
+sudo sed -i "s/my_domain_name/$my_hostname/g" /etc/nginx/sites-available/nextcloud
 
-sudo certbot --nginx --agree-tos --redirect --staple-ocsp --email $my_email -d $domainame
+sudo certbot --nginx --agree-tos --redirect --staple-ocsp --email $my_email -d $my_hostname
 
 sudo ln -s /etc/nginx/sites-available/nextcloud /etc/nginx/sites-enabled/
 nginx -t
