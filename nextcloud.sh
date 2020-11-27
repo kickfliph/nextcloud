@@ -15,8 +15,33 @@ sudo systemctl start mariadb.service
 sudo mysql_secure_installation
 sudo systemctl restart mariadb.service
 
-sudo apt install php-fpm php-mbstring php-xmlrpc php-soap php-apcu php-smbclient php-ldap php-redis php-gd php-xml php-intl php-json php-imagick php-mysql php-cli php-ldap php-zip php-curl php-dev libmcrypt-dev php-pear -y
+sudo apt install dnsutils php-fpm php-mbstring php-xmlrpc php-soap php-apcu php-smbclient php-ldap php-redis php-gd php-xml php-intl php-json php-imagick php-mysql php-cli php-ldap php-zip php-curl php-dev libmcrypt-dev php-pear -y
 
+echo "======================================================================================================================================"
+echo ""
+while [[ $valve != 1 ]]
+do
+
+  echo ""
+     read -p 'Please enter Data Base Name: ' dbname
+  echo ""
+     read -p 'Please enter Data Base user name: ' users
+  echo ""
+     read -s -p 'Please enter password Data Base user: ' shadows
+  echo ""
+
+  if [ ! -z "$dbname" ] || [ ! -z "$shadows" ] || [ ! -z "$users" ] ; then
+     valve=1
+   else
+     echo 'Inputs cannot be blank please try again!'
+  fi
+done
+valve=0
+
+mysql -e "CREATE DATABASE ${dbname};"
+mysql -e "CREATE USER '${users}'@'localhost' IDENTIFIED BY '${shadows}';"
+mysql -e "GRANT ALL ON ${dbname}.* TO '${users}'@'localhost' IDENTIFIED BY '${shadows}' WITH GRANT OPTION;"
+mysql -e "FLUSH PRIVILEGES;"
 
 echo "================================================================================================================================"
 echo " "
@@ -39,11 +64,6 @@ do
 
 done
 echo ""
-
-mysql -e "CREATE DATABASE ${dbname};"
-mysql -e "CREATE USER '${users}'@'localhost' IDENTIFIED BY '${shadows}';"
-mysql -e "GRANT ALL ON ${dbname}.* TO '${users}'@'localhost' IDENTIFIED BY '${shadows}' WITH GRANT OPTION;"
-mysql -e "FLUSH PRIVILEGES;"
 
 sudo apt install certbot python-certbot-nginx python3-certbot-nginx -y
 sudo systemctl stop nginx
